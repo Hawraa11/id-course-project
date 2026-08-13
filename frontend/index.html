@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .add-task-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        .add-task-btn:hover {
+            background: #0056b3;
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .add-task-btn:active {
+            transform: translateY(0);
+        }
+
+        .board {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .column {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .column-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .column-todo .column-header { border-color: #6c757d; }
+        .column-inprogress .column-header { border-color: #007bff; }
+        .column-done .column-header { border-color: #28a745; }
+
+        .task-list {
+            min-height: 300px;
+        }
+
+        .task-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: grab;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .task-list.drag-over {
+            background: #f0f8ff;
+            border: 2px dashed #007bff;
+            border-radius: 6px;
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .task-description {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background: #ffebee; color: #c62828; }
+        .priority-medium { background: #fff3e0; color: #ef6c00; }
+        .priority-low { background: #e8f5e9; color: #2e7d32; }
+
+        .task-assignee {
+            color: #666;
+        }
+
+        .edit-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            background: #e3f2fd;
+            color: #1976d2;
+            transition: background 0.2s ease;
+        }
+
+        .edit-btn:hover {
+            background: #bbdefb;
+        }
+
+        .edit-btn:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 1px;
+        }
+
+        .state-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            color: #007bff;
+        }
+
+        .error {
+            color: #c62828;
+        }
+
+        .empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .board-error {
+            background: #ffebee;
+            border: 1px solid #c62828;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #c62828;
+            font-size: 14px;
+            display: none;
+        }
+
+        .board-error.visible {
+            display: block;
+        }
+
+        .retry-btn {
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: background 0.2s ease;
+        }
+
+        .retry-btn:hover {
+            background: #b71c1c;
+        }
+
+        .retry-btn:focus {
+            outline: 2px solid #c62828;
+            outline-offset: 1px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: modalFadeIn 0.2s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: 2px solid #007bff;
+            outline-offset: -1px;
+            border-color: #007bff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field-error {
+            color: #c62828;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .form-error {
+            background: #ffebee;
+            border: 1px solid #c62828;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 16px;
+            color: #c62828;
+            font-size: 13px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .cancel-btn {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .cancel-btn:hover {
+            background: #d0d0d0;
+        }
+
+        .cancel-btn:focus {
+            outline: 2px solid #666;
+            outline-offset: 1px;
+        }
+
+        .save-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .save-btn:hover {
+            background: #0056b3;
+        }
+
+        .save-btn:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 1px;
+        }
+
+        .save-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .filter-bar {
+            max-width: 1200px;
+            margin: 0 auto 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: 2px solid #007bff;
+            outline-offset: -1px;
+            border-color: #007bff;
+        }
+
+        .clear-filters-btn {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s ease;
+            height: 32px;
+        }
+
+        .clear-filters-btn:hover {
+            background: #d0d0d0;
+        }
+
+        .no-results-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .due-date {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .overdue-badge {
+            background: #ffebee;
+            color: #c62828;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Task Tracker</h1>
+        <p class="subtitle">Manage your tasks with a simple Kanban board</p>
+        <button class="add-task-btn" onclick="openModal()">+ Add Task</button>
+    </div>
+
+    <div class="board-error" id="board-error">
+        <span id="error-message">Failed to load tasks</span>
+        <button class="retry-btn" onclick="retryFetch()">Retry</button>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="search-input">Search</label>
+            <input type="text" id="search-input" placeholder="Search title or description...">
+        </div>
+        <div class="filter-group">
+            <label for="status-filter">Status</label>
+            <select id="status-filter">
+                <option value="">All</option>
+                <option value="ToDo">To Do</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Done">Done</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="priority-filter">Priority</label>
+            <select id="priority-filter">
+                <option value="">All</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+        </div>
+        <div class="filter-group" style="flex: 0; min-width: auto;">
+            <label for="overdue-filter" style="margin-bottom: 8px;">&nbsp;</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="overdue-filter" style="width: auto; margin: 0;">
+                <span style="font-size: 13px; color: #666;">Overdue only</span>
+            </div>
+        </div>
+        <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
+    </div>
+
+    <div class="board">
+        <div class="column column-todo">
+            <div class="column-header">To Do</div>
+            <div class="task-list" id="todo-list" data-status="ToDo"></div>
+        </div>
+        <div class="column column-inprogress">
+            <div class="column-header">In Progress</div>
+            <div class="task-list" id="inprogress-list" data-status="InProgress"></div>
+        </div>
+        <div class="column column-done">
+            <div class="column-header">Done</div>
+            <div class="task-list" id="done-list" data-status="Done"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span id="modal-title">Create Task</span>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-error" id="form-error" style="display: none;"></div>
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" required>
+                    <div class="field-error" id="title-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="ToDo">To Do</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <select id="priority" name="priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assignee">Assignee</label>
+                    <input type="text" id="assignee" name="assignee">
+                </div>
+                <div class="form-group">
+                    <label for="due_date">Due Date</label>
+                    <input type="date" id="due_date" name="due_date">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="save-btn" id="save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001';
+        const PRIORITY_ORDER = { 'High': 0, 'Medium': 1, 'Low': 2 };
+        
+        let tasks = [];
+        let boardState = 'loading';
+        let draggedCard = null;
+        let originalStatus = null;
+        let currentEditId = null;
+
+        async function fetchTasks() {
+            boardState = 'loading';
+            hideBoardError();
+            renderBoardState();
+
+            const search = document.getElementById('search-input').value;
+            const status = document.getElementById('status-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+            const overdue = document.getElementById('overdue-filter').checked;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (status) params.append('status', status);
+            if (priority) params.append('priority', priority);
+            if (overdue) params.append('overdue', 'true');
+
+            try {
+                const response = await fetch(`${API_BASE}/tasks?${params.toString()}`);
+                if (!response.ok) throw new Error('Failed to fetch tasks');
+                tasks = await response.json();
+                boardState = 'ready';
+                renderBoard(tasks);
+            } catch (error) {
+                boardState = 'error';
+                showBoardError(error.message);
+                renderBoardState();
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('priority-filter').value = '';
+            document.getElementById('overdue-filter').checked = false;
+            fetchTasks();
+        }
+
+        function retryFetch() {
+            fetchTasks();
+        }
+
+        function showBoardError(message) {
+            const errorDiv = document.getElementById('board-error');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message || 'Failed to load tasks';
+            errorDiv.classList.add('visible');
+        }
+
+        function hideBoardError() {
+            document.getElementById('board-error').classList.remove('visible');
+        }
+
+        function renderBoardState() {
+            const columns = ['todo-list', 'inprogress-list', 'done-list'];
+            
+            columns.forEach(colId => {
+                const col = document.getElementById(colId);
+                col.innerHTML = '';
+                
+                if (boardState === 'loading') {
+                    col.innerHTML = '<div class="state-message loading">Loading...</div>';
+                } else if (boardState === 'error') {
+                    col.innerHTML = '<div class="state-message error">Error loading tasks</div>';
+                }
+            });
+        }
+
+        function renderBoard(tasks) {
+            const columns = {
+                'ToDo': document.getElementById('todo-list'),
+                'InProgress': document.getElementById('inprogress-list'),
+                'Done': document.getElementById('done-list')
+            };
+
+            const tasksByStatus = {
+                'ToDo': [],
+                'InProgress': [],
+                'Done': []
+            };
+
+            tasks.forEach(task => {
+                if (tasksByStatus[task.status]) {
+                    tasksByStatus[task.status].push(task);
+                }
+            });
+
+            if (tasks.length === 0) {
+                Object.values(columns).forEach(col => {
+                    col.innerHTML = '<div class="state-message empty">No tasks</div>';
+                });
+                return;
+            }
+
+            Object.keys(tasksByStatus).forEach(status => {
+                const column = columns[status];
+                column.innerHTML = '';
+
+                const sortedTasks = tasksByStatus[status].sort((a, b) => {
+                    const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+                    if (priorityDiff !== 0) return priorityDiff;
+                    return a.id.localeCompare(b.id);
+                });
+
+                if (sortedTasks.length === 0) {
+                    column.innerHTML = '<div class="state-message empty">No tasks</div>';
+                } else {
+                    sortedTasks.forEach(task => {
+                        column.appendChild(createTaskCard(task));
+                    });
+                }
+            });
+        }
+
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.draggable = true;
+            card.dataset.taskId = task.id;
+            card.dataset.status = task.status;
+
+            const assigneeText = task.assignee ? escapeHtml(task.assignee) : 'Unassigned';
+            const descriptionHtml = task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : '';
+
+            let dueDateHtml = '';
+            if (task.due_date) {
+                const dueDate = new Date(task.due_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isOverdue = dueDate < today && task.status !== 'Done';
+                const overdueBadge = isOverdue ? '<span class="overdue-badge">Overdue</span>' : '';
+                dueDateHtml = `<div class="due-date">Due: ${task.due_date}${overdueBadge}</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="task-title">${escapeHtml(task.title)}</div>
+                ${descriptionHtml}
+                <div class="task-meta">
+                    <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
+                    <span class="task-assignee">${assigneeText}</span>
+                </div>
+                ${dueDateHtml}
+                <button class="edit-btn" onclick="openEditModal('${task.id}')">Edit</button>
+            `;
+
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+
+            return card;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            originalStatus = this.dataset.status;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.task-list').forEach(col => {
+                col.classList.remove('drag-over');
+            });
+            draggedCard = null;
+            originalStatus = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (!draggedCard) return;
+
+            const taskId = draggedCard.dataset.taskId;
+            const targetStatus = this.dataset.status;
+
+            if (targetStatus === originalStatus) {
+                return;
+            }
+
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const oldStatus = task.status;
+            
+            task.status = targetStatus;
+            renderBoard(tasks);
+
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: targetStatus })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    task.status = oldStatus;
+                    renderBoard(tasks);
+                    
+                    if (response.status === 422) {
+                        showBoardError(`Invalid status transition: ${error.detail}`);
+                    } else {
+                        showBoardError(error.detail || 'Failed to update task');
+                    }
+                }
+            } catch (error) {
+                task.status = oldStatus;
+                renderBoard(tasks);
+                showBoardError(`Network error: ${error.message}`);
+            }
+        }
+
+        function setupDragAndDrop() {
+            const columns = document.querySelectorAll('.task-list');
+            columns.forEach(column => {
+                column.addEventListener('dragover', handleDragOver);
+                column.addEventListener('dragleave', handleDragLeave);
+                column.addEventListener('drop', handleDrop);
+            });
+        }
+
+        const originalRenderBoard = renderBoard;
+        renderBoard = function(tasks) {
+            originalRenderBoard(tasks);
+            setupDragAndDrop();
+        };
+
+        function openModal() {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Create Task';
+            document.getElementById('task-form').reset();
+            document.getElementById('task-id').value = '';
+            document.getElementById('status').value = 'ToDo';
+            document.getElementById('priority').value = 'Medium';
+            document.getElementById('due_date').value = '';
+            document.getElementById('title-error').textContent = '';
+            document.getElementById('form-error').textContent = '';
+            document.getElementById('form-error').style.display = 'none';
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function openEditModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            currentEditId = taskId;
+            document.getElementById('modal-title').textContent = 'Edit Task';
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('title').value = task.title;
+            document.getElementById('description').value = task.description || '';
+            document.getElementById('status').value = task.status;
+            document.getElementById('priority').value = task.priority;
+            document.getElementById('assignee').value = task.assignee || '';
+            document.getElementById('due_date').value = task.due_date || '';
+            document.getElementById('title-error').textContent = '';
+            document.getElementById('form-error').textContent = '';
+            document.getElementById('form-error').style.display = 'none';
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            currentEditId = null;
+            document.getElementById('title-error').textContent = '';
+            document.getElementById('form-error').textContent = '';
+            document.getElementById('form-error').style.display = 'none';
+        }
+
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const status = document.getElementById('status').value;
+            const priority = document.getElementById('priority').value;
+            const assignee = document.getElementById('assignee').value.trim() || null;
+
+            document.getElementById('title-error').textContent = '';
+            document.getElementById('form-error').textContent = '';
+            document.getElementById('form-error').style.display = 'none';
+
+            if (!title) {
+                document.getElementById('title-error').textContent = 'Title is required';
+                return;
+            }
+
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+
+            try {
+                const url = currentEditId 
+                    ? `${API_BASE}/tasks/${currentEditId}`
+                    : `${API_BASE}/tasks`;
+                
+                const method = currentEditId ? 'PATCH' : 'POST';
+                
+                const payload = { title, description, status, priority, assignee };
+
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        document.getElementById('form-error').textContent = data.detail || 'Validation error';
+                        document.getElementById('form-error').style.display = 'block';
+                    } else {
+                        document.getElementById('form-error').textContent = data.detail || 'Failed to save task';
+                        document.getElementById('form-error').style.display = 'block';
+                    }
+                    return;
+                }
+
+                closeModal();
+                await fetchTasks();
+            } catch (error) {
+                document.getElementById('form-error').textContent = error.message;
+                document.getElementById('form-error').style.display = 'block';
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', fetchTasks);
+        document.getElementById('status-filter').addEventListener('change', fetchTasks);
+        document.getElementById('priority-filter').addEventListener('change', fetchTasks);
+        document.getElementById('overdue-filter').addEventListener('change', fetchTasks);
+
+        fetchTasks();
+    </script>
+</body>
+</html>
