@@ -24,6 +24,11 @@ def test_create_task_blank_title_returns_422(client):
     assert response.status_code == 422
 
 
+def test_create_task_null_title_returns_422(client):
+    response = client.post("/tasks", json={"title": None})
+    assert response.status_code == 422
+
+
 def test_create_task_invalid_priority_returns_422(client):
     response = client.post("/tasks", json={"title": "Test", "priority": "Invalid"})
     assert response.status_code == 422
@@ -102,6 +107,12 @@ def test_patch_same_status_returns_422(client, created_task):
     response = client.patch(f"/tasks/{created_task['id']}", json={"status": "ToDo"})
     assert response.status_code == 422
     assert "Invalid status transition" in response.json()["detail"]
+
+
+def test_patch_null_title_returns_422(client, created_task):
+    response = client.patch(f"/tasks/{created_task['id']}", json={"title": None})
+    assert response.status_code == 422
+    assert "title cannot be null" in response.json()["detail"]
 
 
 def test_delete_existing_returns_204_no_body(client, created_task):
