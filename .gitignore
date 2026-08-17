@@ -26,3 +26,6 @@ env/
 
 # OS
 .DS_Store
+
+# GitHub clone directories
+id-course-project/

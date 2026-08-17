@@ -9,7 +9,7 @@ The Task Tracker API is a FastAPI-based task management application with a Kanba
 - No authentication or authorization
 - CORS enabled for all origins (development setup)
 - Single-page vanilla JavaScript frontend
-- 39 tests covering CRUD, validation, status transitions, search, filtering, and due dates
+- 40 tests covering CRUD, validation, status transitions, search, filtering, and due dates
 
 ## Tech Stack and Commands
 
@@ -31,6 +31,24 @@ python -m app.main
 **Test commands (from README.md):**
 ```bash
 # Run all tests
+python -m pytest tests/test_tasks.py -v
+```
+
+**Docker commands (from README.md):**
+```bash
+# Build the Docker image
+docker build -t task-tracker-api .
+
+# Run the container
+docker run -p 8001:8001 task-tracker-api
+
+# Verify health endpoint
+curl http://localhost:8001/health
+```
+
+**CI commands (from .github/workflows/ci.yml):**
+```bash
+# CI workflow runs pytest on push and pull request
 python -m pytest tests/test_tasks.py -v
 ```
 
@@ -65,6 +83,7 @@ Invalid transitions (raise HTTP 422):
 ### Validation Rules (from app/models.py)
 - **Title validation:**
   - Cannot be blank after trimming whitespace
+  - Cannot be null (explicitly rejected in TaskUpdate)
   - Maximum 200 characters
   - Applies to both TaskCreate and TaskUpdate
 - **Extra fields:** Request models use `extra="forbid"` to reject unknown fields
@@ -84,29 +103,32 @@ A task is overdue when:
 - `PATCH /tasks/{task_id}` - Update task (returns 404 if not found, 422 for invalid status transition)
 - `DELETE /tasks/{task_id}` - Delete task (returns 204 on success, 404 if not found)
 
-## Module 5 Guardrails
+## Final Project Guardrails
 
-**Primary constraint:** This is a grading and governance module. Do not build new app features.
+**Primary constraint:** This is a final project for AI-assisted coding course. Focus on documentation, CI, Docker, and AI review evidence. Do not add new product features.
 
 **Working mode:**
 1. **Docs-first:** Prefer read-only analysis first. Edit files in docs/ only unless explicitly approved otherwise.
-2. **Read-only by default:** Do not modify app/ during Module 5 unless explicitly asked for one specific minimal fix.
-3. **One task per thread:** Focus on a single bounded task per conversation.
-4. **Cite evidence:** When making claims about the repo, cite actual files you inspected (e.g., "from app/models.py line 8-11").
-5. **No guessing:** If uncertain or a file is not visible, say so instead of guessing.
+2. **Read-only by default:** Do not modify app/ or frontend/ during final project unless for a small bug fix, security fix, or documentation-supported correction.
+3. **Evidence-based:** When making claims about the repo, cite actual files you inspected (e.g., "from app/models.py line 8-11").
+4. **No guessing:** If uncertain or a file is not visible, say so instead of guessing.
+5. **Protect existing functionality:** The first responsibility is to protect what already exists. Do not ask AI to rewrite the project.
 
 **Allowed actions:**
 - Read and analyze any file in the repository
 - Create or edit documentation in docs/
+- Create or update CI/CD configuration (.github/workflows/)
+- Create or update Docker configuration (Dockerfile, .dockerignore)
 - Review and audit existing code
-- Propose minimal fixes with explicit approval
+- Propose minimal fixes with explicit approval and documentation
 
 **Restricted actions:**
-- Adding new features to app/
-- Modifying app/ without explicit user approval
+- Adding new features to app/ or frontend/
+- Modifying app/ or frontend/ without explicit user approval and documentation
 - Running destructive commands
 - Changing database schema (none exists, but principle applies)
-- Adding authentication or deployment infrastructure
+- Adding authentication, production database, notifications, or unrelated UI changes
+- Pasting credentials, .env values, tokens, production logs, or real personal/customer data into AI tools or the repo
 
 ## Security and Governance Reminders
 
@@ -150,19 +172,27 @@ task-tracker-api/
 │   └── index.html        # Single-page Kanban board
 ├── tests/
 │   ├── conftest.py       # Pytest fixtures
-│   └── test_tasks.py     # API tests (39 tests)
+│   └── test_tasks.py     # API tests (40 tests)
 ├── docs/
-│   ├── AGENTS.md         # This file
-│   ├── user-stories.md
-│   ├── mini-adr.md
-│   ├── prompt-log.md
-│   ├── verification.md
-│   └── reflection.md
+│   ├── midcourse/        # Mid-course project documents
+│   │   ├── user-stories.md
+│   │   ├── mini-adr.md
+│   │   ├── prompt-log.md
+│   │   ├── verification.md
+│   │   └── reflection.md
+│   ├── release-evidence.md
+│   ├── final-ai-review.md
+│   └── ai-playbook.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── AGENTS.md             # This file
 ├── .env.example
 ├── .gitignore
+├── Dockerfile
+├── .dockerignore
 ├── requirements.txt
 ├── pytest.ini
-├── claude.md
 └── README.md
 ```
 
@@ -174,9 +204,29 @@ task-tracker-api/
 - `created_task`: Creates a sample task for tests
 
 **Test coverage (from tests/test_tasks.py):**
-- 39 tests covering:
+- 40 tests covering:
   - CRUD operations (create, read, update, delete)
-  - Validation (blank title, invalid priority, unknown fields)
+  - Validation (blank title, null title, invalid priority, unknown fields)
   - Status transitions (valid and invalid)
   - Search and filtering (title, description, status, priority, assignee, overdue)
   - Due dates and overdue detection
+
+## Final Project Information
+
+**Branch:** final-project
+
+**Final project deliverables:**
+- CI/CD configuration (.github/workflows/ci.yml)
+- Docker configuration (Dockerfile, .dockerignore)
+- Release evidence documentation (docs/release-evidence.md)
+- AI review and security evidence (docs/final-ai-review.md)
+- Personal AI playbook (docs/ai-playbook.md)
+- Updated README.md with Final Project section
+- AGENTS.md with repo-specific guardrails
+
+**Final project constraints:**
+- No new product features
+- Protect app/ and frontend/ directories
+- Only minimal bug fixes, security fixes, or documentation-supported corrections allowed
+- No real secrets or personal data in AI tools or repo
+- Own the result - be able to explain every changed line, command, or config choice

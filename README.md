@@ -28,13 +28,23 @@ task-tracker-api/
 │   ├── conftest.py       # Pytest fixtures
 │   └── test_tasks.py     # API tests
 ├── docs/                 # Project documentation
-│   ├── user-stories.md
-│   ├── mini-adr.md
-│   ├── prompt-log.md
-│   ├── verification.md
-│   └── reflection.md
+│   ├── midcourse/        # Mid-course project documents
+│   │   ├── user-stories.md
+│   │   ├── mini-adr.md
+│   │   ├── prompt-log.md
+│   │   ├── verification.md
+│   │   └── reflection.md
+│   ├── release-evidence.md
+│   ├── final-ai-review.md
+│   └── ai-playbook.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── AGENTS.md
 ├── .env.example
 ├── .gitignore
+├── Dockerfile
+├── .dockerignore
 ├── requirements.txt
 ├── pytest.ini
 └── README.md
@@ -110,7 +120,7 @@ Run all tests:
 python -m pytest tests/test_tasks.py -v
 ```
 
-The test suite includes 38 tests covering:
+The test suite includes 40 tests covering:
 - CRUD operations
 - Validation
 - Status transitions
@@ -152,3 +162,54 @@ FastAPI auto-generates interactive Swagger UI docs at `/docs` (and a ReDoc alter
   - It has a due date
   - Today's date is later than the due date
   - The task is not completed (status != Done)
+
+## Final Project
+
+Branch reviewed: final-project
+
+### What this submission demonstrates
+- Existing Task Tracker app still runs inside the intended course scope
+- CI runs the pytest suite on push and/or pull request
+- Docker image builds and runs with /health returning 200
+- AI review, security, and ownership evidence is in docs/
+
+### How to run locally
+```bash
+# Setup
+python -m venv venv
+venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+pip install pytest httpx
+copy .env.example .env
+
+# Run the API server
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+### How to run tests
+```bash
+python -m pytest tests/test_tasks.py -v
+```
+
+### How to run with Docker
+```bash
+# Build the Docker image
+docker build -t task-tracker-api .
+
+# Run the container
+docker run -p 8001:8001 task-tracker-api
+
+# Verify health endpoint
+curl http://localhost:8001/health
+# Or use PowerShell: Invoke-WebRequest -Uri http://localhost:8001/health -UseBasicParsing
+```
+
+### Evidence files
+- docs/release-evidence.md
+- docs/final-ai-review.md
+- docs/ai-playbook.md
+
+### AI assistance summary
+AI helped draft or review: CI, Docker, docs, security, debugging
+I verified the work by: tests, diff review, Docker, /health, manual scan
+One AI suggestion I rejected or corrected: Updated Dockerfile to use Python 3.10 to match CI and local environment, added httpx and pytest to Docker build for testing capability
