@@ -120,7 +120,7 @@ Run all tests:
 python -m pytest tests/test_tasks.py -v
 ```
 
-The test suite includes 40 tests covering:
+The test suite includes 41 tests covering:
 - CRUD operations
 - Validation
 - Status transitions

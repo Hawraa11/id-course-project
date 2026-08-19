@@ -9,7 +9,7 @@ The Task Tracker API is a FastAPI-based task management application with a Kanba
 - No authentication or authorization
 - CORS enabled for all origins (development setup)
 - Single-page vanilla JavaScript frontend
-- 40 tests covering CRUD, validation, status transitions, search, filtering, and due dates
+- 41 tests covering CRUD, validation, status transitions, search, filtering, and due dates
 
 ## Tech Stack and Commands
 
