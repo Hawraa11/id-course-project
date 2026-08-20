@@ -17,8 +17,8 @@
 
 ## Docker evidence
 - Build command: `docker build -t task-tracker-api .`
-- Run command: `docker run -p 8001:8001 task-tracker-api`
-- /health check: Configured to verify /health returns 200
+- Run command: `docker run -d -p 8001:8001 --name task-tracker-test task-tracker-api`
+- /health check: `{"status":"ok","timestamp":"2026-08-20T08:52:43.350767+00:00"}` (HTTP 200)
 - Non-root check, if implemented: Yes - Dockerfile creates non-root user 'app' and switches to it
 - No-baked-secrets check: .dockerignore excludes .env, .env.example, .git, and other sensitive files
 
@@ -31,3 +31,4 @@
 | Dockerfile uses non-root user | Reviewed Dockerfile - includes adduser and USER app commands | Valid | None |
 | .dockerignore excludes sensitive files | Reviewed .dockerignore - excludes .env, .env.example, .git, etc. | Valid | Added .env.example and .github to exclusions |
 | Null title validation is rejected | Added test and fixed model to reject null titles | Valid | Fixed TaskUpdate validator and added tests |
+| Docker container runs successfully | Built and ran container, verified /health endpoint returns 200 | Valid | Fixed Dockerfile PATH issue - removed --user flag for global package installation |
