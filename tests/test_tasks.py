@@ -113,7 +113,7 @@ def test_patch_null_title_returns_422(client, created_task):
     response = client.patch(f"/tasks/{created_task['id']}", json={"title": None})
     assert response.status_code == 422
     errors = response.json()["detail"]
-    assert any("title cannot be null" in str(error) for error in errors)
+    assert any("title cannot be null" in error.get("msg", "") for error in errors)
 
 
 def test_delete_existing_returns_204_no_body(client, created_task):

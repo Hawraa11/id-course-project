@@ -5,22 +5,20 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir --user -r requirements.txt && \
-    pip install --no-cache-dir --user httpx pytest
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir httpx pytest
 
 # Runtime stage
 FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY app ./app
 COPY tests ./tests
 
 RUN adduser --disabled-password --gecos '' app && \
     chown -R app:app /app
-
-ENV PATH=/root/.local/bin:$PATH
 
 USER app
 
